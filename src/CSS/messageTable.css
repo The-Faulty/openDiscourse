@@ -1,0 +1,148 @@
+/* Table and Message Styling */
+
+.mainArea {
+  position: absolute;
+  top: 0;
+  left: var(--sideBarMargin);
+  height: 100%;
+  width: calc(100% - var(--sideBarMargin));
+}
+
+.messageTable {
+  position: absolute;
+  top: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block;
+  margin-bottom: 3rem;
+  border-spacing: 0px 1rem;
+  height: calc(100% - 3rem);
+  width: calc(100% - 0.25rem);
+  color: #dbdee6;
+}
+
+.messageTableBody {
+  position: absolute;
+  bottom: 0;
+  width: calc(100vw - 1rem);
+  height: inherit;
+}
+
+.messageTableRow {
+  position: relative;
+  width: calc(100vw - 3rem);
+}
+
+.messageTableRow:hover {
+  background-color: #292929;
+  border-radius: 2rem;
+}
+
+.pfp {
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: #5e5e5e;
+  border: none;
+  outline: none;
+  border-radius: 50%;
+  transition: 25ms;
+}
+.pfp:hover {
+  cursor: pointer;
+}
+.pfp:active {
+  transform: translateY(1px);
+}
+.pfpWrapper {
+  position: relative;
+  float: top;
+  height: 100%;
+  width: 3.5rem;
+  height: 4rem;
+  margin-left: 1rem;
+}
+.tablePFP {
+  display: block;
+  position: relative;
+  float: top;
+  width: 3.5rem;
+  min-height: 4rem;
+  height: 100%;
+  margin-right: 1rem;
+}
+
+.messageBody {
+  position: relative;
+  width: 100%;
+  min-height: 4rem;
+}
+
+.messageTop {
+  position: relative;
+  padding-top: 0.25rem;
+  height: 1.75rem;
+  left: 0;
+}
+
+.messageDate {
+  position: relative;
+  top: 0;
+  display: inline;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #5e5e5e;
+  padding-left: 0.5rem;
+  padding-top: 0.25rem;
+}
+.messageDate:hover {
+  text-decoration: none;
+  cursor: default;
+}
+
+.profileTop {
+  position: relative;
+  text-align: left;
+  vertical-align: top;
+  display: inline;
+  font-size: 1.125rem;
+  padding-left: 1rem;
+  color: #ffd700;
+  left: 0;
+}
+.profileName:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.messageText {
+  position: relative;
+  min-height: 1.75rem;
+  width: calc(100vw - 6.75rem - var(--sideBarMargin));
+  text-align: left;
+  vertical-align: top;
+  padding-left: 1rem;
+  padding-bottom: 0.25rem;
+  font-size: 1.125rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Scroll Bar Styling */
+
+.messageTable::-webkit-scrollbar {
+  width: 0.5rem;
+}
+.messageTable::-webkit-scrollbar-track {
+  background-color: #1f1f1f;
+  margin: 0.5rem;
+  margin-bottom: 0.95rem;
+  border-radius: 0.25rem;
+}
+.messageTable::-webkit-scrollbar-thumb {
+  background-color: #111111;
+  border-radius: 0.25rem;
+}
