@@ -3,8 +3,9 @@ import "./CSS/messageTable.css";
 import "./CSS/modal.css";
 import { fireFunctions } from "./firebaseHandling";
 import { Parser } from "./parser.js";
+import DOMPurify from "dompurify";
 import ReactDOM from "react-dom";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Redirect,
   Route,
@@ -16,6 +17,21 @@ import {
 var fireB = new fireFunctions();
 var location, history, isFocused;
 var notifs = 0;
+
+export var auth = {
+  aInternal: false,
+  aListener: function (val) {},
+  set auth(val) {
+    this.aInternal = val;
+    this.aListener(val);
+  },
+  get auth() {
+    return this.aInternal;
+  },
+  registerListener: function (listener) {
+    this.aListener = listener;
+  }
+};
 
 export default function App() {
   return (
@@ -86,60 +102,68 @@ function Messages() {
   );
 }
 
-class MessageTable extends React.Component {
-  constructor(props) {
-    super(props);
-    this.loaded = false;
-    this.scroll = true;
-    this.state = { rows: [] };
-    this.messagesRef = fireB.database.ref(`${location.pathname}/messages`);
-  }
-  componentDidMount() {
-    this.loaded = true;
-    this.messagesRef
-      .limitToLast(10)
-      .on("child_added", (data) => this.receiveMessage(data.val(), data.key));
-  }
-  componentDidUpdate() {
-    if (this.scroll) scrollBottom();
-  }
-  getSnapshotBeforeUpdate() {
-    if (userScroll() && this.loaded) this.scroll = false;
-    if (!userScroll() && this.loaded) {
-      this.scroll = true;
+function MessageTable(props) {
+  const loaded = useRef(false);
+  const [state, setState] = useState([]);
+  const [isAuth, setAuth] = useState(false);
+  var scroll = true;
+  var messagesRef = fireB.database.ref(`${location.pathname}/messages`);
+
+  auth.registerListener((val) => {
+    setAuth(val);
+  });
+
+  useEffect(() => {
+    if (!loaded.current && isAuth) {
+      loaded.current = true;
+      messagesRef
+        .limitToLast(10)
+        .on("child_added", (data) => receiveMessage(data.val(), data.key));
     }
-    return null;
-  }
-  receiveMessage(data, key) {
-    console.log("receive");
-    data.key = key;
+    if (scroll) scrollBottom();
+  });
+
+  const receiveMessage = (data, key) => {
     data.text = data.text.replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+    data.text = parser.inputFormat(data.text);
+    //console.log(data.text);
+    data.text = DOMPurify.sanitize(data.text);
+    //console.log(data.text);
+    data.key = key;
     if (!isFocused) {
       notifs++;
       document.title = `openDiscourse (${notifs})`;
     }
-    this.setState((state) => {
-      const rows = state.rows.concat(data);
-      return { rows };
+    setState((state) => {
+      const rows = state.concat(data);
+      return rows;
     });
+  };
+
+  function beforeUpdate() {
+    if (loaded && userScroll()) scroll = false;
+    if (loaded && !userScroll()) {
+      scroll = true;
+    }
+    return null;
   }
-  render() {
-    return (
-      <tbody className="messageTableBody" id="messageTableBody">
-        {this.state.rows.map((data) => (
-          <Message
-            name={data.name}
-            pfpUrl={data.pfpUrl}
-            time={data.time}
-            text={data.text}
-            uid={data.uid}
-            keyId={data.key}
-            key={data.key}
-          />
-        ))}
-      </tbody>
-    );
-  }
+  beforeUpdate();
+
+  return (
+    <tbody className="messageTableBody" id="messageTableBody">
+      {state.map((data) => (
+        <Message
+          name={data.name}
+          pfpUrl={data.pfpUrl}
+          time={data.time}
+          text={data.text}
+          uid={data.uid}
+          keyId={data.key}
+          key={data.key}
+        />
+      ))}
+    </tbody>
+  );
 }
 
 function Message(props) {
@@ -220,11 +244,13 @@ function signOutFB() {
 
 function sendMessage() {
   var messageInput = document.getElementById("messageInput");
-  if (messageInput.innerHTML !== "" && fireB.isAuth) {
+  if (messageInput.innerHTML !== "" && fireB.auth.currentUser) {
+    let textOut = messageInput.innerHTML;
+    textOut = DOMPurify.sanitize(textOut);
     var messageInfo = {
       name: fireB.uInfo.displayName,
       time: new Date().toString(),
-      text: messageInput.innerHTML,
+      text: textOut,
       pfpUrl: fireB.uInfo.photoURL,
       uid: fireB.uInfo.uid
     };
@@ -234,7 +260,7 @@ function sendMessage() {
     messageInput.focus();
     scrollBottom();
   }
-  if (!fireB.isAuth) {
+  if (!fireB.auth.currentUser) {
     alert("Please sign in first");
   }
 }
@@ -264,8 +290,8 @@ export class mainFunctions {
 function userScroll() {
   var element = document.getElementById("messageTable");
   if (
-    element.scrollHeight - Math.abs(element.scrollTop) ===
-    element.clientHeight
+    element &&
+    element.scrollHeight - Math.abs(element.scrollTop) === element.clientHeight
   ) {
     return false;
   }
